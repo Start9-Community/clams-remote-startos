@@ -1,22 +1,25 @@
-FROM node:latest as build-stage
+FROM node:20-bookworm-slim AS build
 
-RUN mkdir /app
-# COPY the clams-remote into the container for build.
-ADD clams-remote /app
+RUN \
+    apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    ca-certificates \
+    git && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
 WORKDIR /app
+COPY clams-remote /app
 
-# build the project.
-RUN yarn 
-RUN yarn build
+RUN \
+    rm -f /app/.git && \
+    yarn install --frozen-lockfile && \
+    yarn build
 
-FROM nginx:1.25.4
+FROM nginx:1.27-alpine
+
 RUN rm -rf /usr/share/nginx/html/*
-COPY --from=build-stage /app/build /usr/share/nginx/html
+COPY --from=build /app/build /usr/share/nginx/html
+COPY assets/nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 80
-
-ADD ./nginx.conf /etc/nginx/nginx.conf
-
-ADD ./docker_entrypoint.sh /usr/local/bin/docker_entrypoint.sh
-RUN chmod a+x /usr/local/bin/docker_entrypoint.sh
-ENTRYPOINT [ "docker_entrypoint.sh" ]
