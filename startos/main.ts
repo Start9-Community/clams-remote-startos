@@ -1,26 +1,22 @@
 import { i18n } from './i18n'
 import { sdk } from './sdk'
-import { dataDir, uiPort } from './utils'
+import { uiPort } from './utils'
 
 export const main = sdk.setupMain(async ({ effects }) => {
   console.info(i18n('Starting Clams Remote...'))
 
-  const mounts = sdk.Mounts.of().mountVolume({
-    volumeId: 'main',
-    subpath: null,
-    mountpoint: dataDir,
-    readonly: false,
-  })
-
-  const sub = await sdk.SubContainer.of(
-    effects,
-    { imageId: 'clams-remote' },
-    mounts,
-    'primary',
-  )
-
   return sdk.Daemons.of(effects).addDaemon('primary', {
-    subcontainer: sub,
+    subcontainer: await sdk.SubContainer.of(
+      effects,
+      { imageId: 'clams-remote' },
+      sdk.Mounts.of().mountVolume({
+        volumeId: 'main',
+        subpath: null,
+        mountpoint: '/data',
+        readonly: false,
+      }),
+      'primary',
+    ),
     exec: {
       command: ['nginx', '-g', 'daemon off;'],
     },

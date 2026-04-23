@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="icon.png" alt="Clams Remote Logo" width="21%">
+  <img src="icon.svg" alt="Clams Remote Logo" width="21%">
 </p>
 
 # Clams Remote on StartOS
@@ -74,7 +74,7 @@ Both Tor and LAN bindings are exposed via a standard StartOS MultiHost. The SPA 
 
 | Dependency | Required | Health Check | Version |
 |------------|----------|--------------|---------|
-| Core Lightning (`c-lightning`) | Yes | `lightningd` | `>=24.02.2.1` |
+| Core Lightning (`c-lightning`) | Yes | `lightningd` | `>=25.12.1:8` |
 
 The **Clams Remote** toggle in Core Lightning's config action must be enabled. It is the only CLN configuration required for this service.
 

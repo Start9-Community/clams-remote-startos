@@ -16,8 +16,8 @@ export const v_2_6_1_0 = VersionInfo.of({
       'Mise à jour de Clams Remote vers v2.6.1 et migration du paquet vers StartOS 0.4.0. Notes de version : https://github.com/clams-tech/Remote/releases/tag/remote-2.6.1',
   },
   migrations: {
-    up: async ({ effects }) => {
-      // Clean up any legacy 0.3.x state on the persistent volume.
+    up: async () => {
+      // Clean up legacy 0.3.5.1 `start9` directory if present on the main volume.
       await rm('/media/startos/volumes/main/start9', {
         recursive: true,
       }).catch(() => {})
