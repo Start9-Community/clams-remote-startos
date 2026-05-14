@@ -9,7 +9,6 @@ export const manifest = setupManifest({
   upstreamRepo: 'https://github.com/clams-tech/Remote',
   marketingUrl: 'https://clams.tech/remote',
   donationUrl: null,
-  docsUrls: ['https://github.com/clams-tech/Remote#readme'],
   description: { short, long },
   volumes: ['main'],
   images: {
