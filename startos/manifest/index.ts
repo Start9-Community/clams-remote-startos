@@ -5,7 +5,7 @@ export const manifest = setupManifest({
   id: 'clams-remote',
   title: 'Clams Remote',
   license: 'gpl',
-  packageRepo: 'https://github.com/clams-tech/clams-remote-startos',
+  packageRepo: 'https://github.com/Start9-Community/clams-remote-startos',
   upstreamRepo: 'https://github.com/clams-tech/Remote',
   marketingUrl: 'https://clams.tech/remote',
   donationUrl: null,

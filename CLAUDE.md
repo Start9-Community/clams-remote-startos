@@ -1,4 +1,3 @@
-## How the upstream version is pulled
+# CLAUDE.md
 
-- Git submodule `clams-remote/` → checkout new tag (`remote-X.Y.Z`)
-- Image is `dockerBuild` from root (no dockerTag to update)
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the doc map and contribution workflow.
