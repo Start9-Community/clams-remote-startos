@@ -1,22 +1,13 @@
-import { VersionInfo, IMPOSSIBLE } from '@start9labs/start-sdk'
-import { rm } from 'fs/promises'
+import { VersionInfo } from '@start9labs/start-sdk'
 
 export const current = VersionInfo.of({
-  version: '2.6.1:3',
+  version: '2.6.1:4',
   releaseNotes: {
-    en_US: 'Internal updates (start-sdk 2.0.x)',
-    es_ES: 'Actualizaciones internas (start-sdk 2.0.x)',
-    de_DE: 'Interne Aktualisierungen (start-sdk 2.0.x)',
-    pl_PL: 'Aktualizacje wewnętrzne (start-sdk 2.0.x)',
-    fr_FR: 'Mises à jour internes (start-sdk 2.0.x)',
+    en_US: 'Internal updates',
+    es_ES: 'Actualizaciones internas',
+    de_DE: 'Interne Aktualisierungen',
+    pl_PL: 'Aktualizacje wewnętrzne',
+    fr_FR: 'Mises à jour internes',
   },
-  migrations: {
-    up: async () => {
-      // Clean up legacy 0.3.5.1 `start9` directory if present on the main volume.
-      await rm('/media/startos/volumes/main/start9', {
-        recursive: true,
-      }).catch(() => {})
-    },
-    down: IMPOSSIBLE,
-  },
+  migrations: {},
 })
