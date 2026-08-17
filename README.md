@@ -1,16 +1,18 @@
 <p align="center">
-  <img src="icon.svg" alt="Clams Remote Logo" width="21%">
+  <img src="icon.png" alt="Clams Remote Logo" width="21%">
 </p>
 
 # Clams Remote on StartOS
 
-> **Upstream docs:** <https://github.com/clams-tech/Remote#readme>
->
 > Everything not listed in this document should behave the same as upstream
-> Clams Remote. If a feature, setting, or behavior is not mentioned here,
-> the upstream documentation is accurate and fully applicable.
+> Clams Remote. If a feature, setting, or behavior is not mentioned here, the
+> upstream documentation is accurate and fully applicable — see the
+> Documentation section of `instructions.md` for links.
 
-[Clams Remote](https://clams.tech/remote) is an open-source progressive web app for controlling Core Lightning nodes. Send and receive lightning and onchain transactions, create BOLT12 offers, and view the status of your channels from your phone or desktop.
+[Clams Remote](https://github.com/clams-tech/Remote) is a browser-only app for controlling a Core Lightning node. **Everything runs client-side**: this package serves the built page and nothing else, and the browser talks straight to Core Lightning's websocket. That single fact explains almost every difference below.
+
+- **Upstream repo:** <https://github.com/clams-tech/Remote>
+- **Wrapper repo:** <https://github.com/Start9-Community/clams-remote-startos>
 
 ---
 
@@ -18,117 +20,142 @@
 
 - [Image and Container Runtime](#image-and-container-runtime)
 - [Volume and Data Layout](#volume-and-data-layout)
-- [Installation and First-Run Flow](#installation-and-first-run-flow)
-- [Network Access and Interfaces](#network-access-and-interfaces)
+- [File Models](#file-models)
 - [Dependencies](#dependencies)
-- [Backups and Restore](#backups-and-restore)
+- [Network Access and Interfaces](#network-access-and-interfaces)
+- [Installation and First-Run Flow](#installation-and-first-run-flow)
+- [Actions](#actions)
+- [Tasks](#tasks)
 - [Health Checks](#health-checks)
-- [Building from Source](#building-from-source)
+- [Backups and Restore](#backups-and-restore)
+- [Limitations and Differences](#limitations-and-differences)
+- [Quick Reference for AI Consumers](#quick-reference-for-ai-consumers)
 
 ---
 
 ## Image and Container Runtime
 
-| Property | Value |
-|----------|-------|
-| Image | `nginx:1.27-alpine` serving the Clams Remote static SPA (built from upstream `clams-tech/Remote`) |
-| Architectures | x86_64, aarch64 |
+One image, built here: nginx plus the built static app.
 
-Clams Remote is a browser-only progressive web app: all logic runs client-side. The StartOS package ships an nginx container whose sole job is to serve the built static files. All lightning-node communication happens directly from your browser to Core Lightning's websocket interface.
+| Property      | Value                               |
+| ------------- | ----------------------------------- |
+| Image         | Built from this repo's `Dockerfile` |
+| Architectures | x86_64, aarch64                     |
+| Command       | `nginx -g 'daemon off;'`            |
 
----
+| Subcontainer | Purpose                                  |
+| ------------ | ---------------------------------------- |
+| `primary`    | The only daemon — the one to `attach` to |
+
+**The container's entire job is to hand the browser a page.** It holds no node credentials, opens no connection to Core Lightning, and has nothing to configure. A support question about a wallet not connecting is almost never about this container.
 
 ## Volume and Data Layout
 
-| Volume | Mount Point | Purpose |
-|--------|-------------|---------|
-| `main` | `/data` | Reserved for future persistent state; currently unused by the service |
+One volume, and nothing uses it.
 
-The SPA itself is stateless server-side; all user state (nodes, settings) is stored in the browser.
+| Volume | Mount Point | Purpose                                       |
+| ------ | ----------- | --------------------------------------------- |
+| `main` | `/data`     | Mounted, but the service writes nothing to it |
 
----
+Every piece of user state — wallets, node connections, runes, settings, transaction history — lives in the **browser's** local storage on the device being used, not on the server. See [Backups and Restore](#backups-and-restore), because this is what surprises people.
 
-## Installation and First-Run Flow
+## File Models
 
-1. **Install Core Lightning** on StartOS if you do not already have it.
-2. **Enable the websocket interface in Core Lightning.** Open Core Lightning → Actions → Config, toggle **Clams Remote** on, and save. This adds `ws::7272` to CLN's `bind-addr` list and exposes the websocket interface that Clams Remote needs.
-3. **Install Clams Remote** from the marketplace and start it.
-4. **Open the web UI** (Tor or LAN).
-5. **Add your node in Clams Remote:** Wallets → Add → Core Lightning → Advanced → Direct Connection → `ws`. Paste the **Remote Websocket URI** from Core Lightning's Properties into the Address field, and paste a **Rune** (Core Lightning → Actions → Generate Rune) into the Rune field. Click **Update**. The status should change to **Connected**.
+None. The package writes no configuration file and models nothing; nginx's configuration is baked into the image.
 
-**Tor vs. LAN:** over Tor Browser, use the `.onion` address and scheme `ws`. On your LAN, use the `.local` address and scheme `wss`.
-
----
-
-## Network Access and Interfaces
-
-| Interface | Protocol | Port | Purpose |
-|-----------|----------|------|---------|
-| Web UI | HTTP | 80 | Clams Remote progressive web app |
-
-Both Tor and LAN bindings are exposed via a standard StartOS MultiHost. The SPA itself listens on no network ports — the browser talks directly to Core Lightning's websocket endpoint (port 7272), which must be reachable from the same network context as the browser (Tor or LAN).
-
----
+There is nothing on the server to seed, correct, or inspect — which also means there is no server-side setting that could be wrong.
 
 ## Dependencies
 
-| Dependency | Required | Health Check | Version |
-|------------|----------|--------------|---------|
-| Core Lightning (`c-lightning`) | Yes | `lightningd` | `>=25.12.1:8` |
+One, and it is required — though not in the way most dependencies are.
 
-The **Clams Remote** toggle in Core Lightning's config action must be enabled. It is the only CLN configuration required for this service.
+| Dependency     | Required | Health checks required | Mounted | Why                           |
+| -------------- | -------- | ---------------------- | ------- | ----------------------------- |
+| Core Lightning | Yes      | `lightningd`           | Nothing | The node the browser controls |
 
----
+**Nothing is mounted and no address is resolved.** This package never talks to Core Lightning; the dependency exists because the app is useless without a node, and because the user has to configure that node before the app can reach it.
 
-## Backups and Restore
+**Core Lightning's websocket must be turned on**, from its own configuration action, and that is a step nothing here can do or verify. Until it is, Clams Remote will serve perfectly and fail to connect. Refer users to Core Lightning's own settings for it.
 
-The `main` volume is included in backups for symmetry with other packages, but the service currently stores no persistent state there — all user-visible state lives in the browser's local storage.
+## Network Access and Interfaces
 
----
+One interface, which serves the page — and one connection that does **not** go through it.
+
+| Interface | Id   | Type | Port | Description              |
+| --------- | ---- | ---- | ---- | ------------------------ |
+| Web UI    | `ui` | ui   | 80   | The Clams Remote web app |
+
+Bound on the `ui-multi` MultiHost over HTTP and not masked.
+
+**The browser connects to Core Lightning directly**, on Core Lightning's own websocket address, not through this service. So two addresses are in play at once, and they have to match in network context: a page loaded over Tor must be given Core Lightning's onion address, and a page loaded over the LAN must be given its LAN address. Mixing them fails at the browser, with nothing on the server to show for it.
+
+That is also why the scheme differs between the two — the LAN address is TLS-terminated by StartOS and the onion is not.
+
+## Installation and First-Run Flow
+
+There is no wizard, no credential, and no task on this side. The work is on Core Lightning's side and in the browser:
+
+1. Turn on Core Lightning's websocket, in its own configuration.
+2. Generate a rune there, and copy its websocket address.
+3. Start Clams Remote, open the interface, and add the node in the app using both.
+
+**Nothing about that survives on the server.** It is entered into the browser, and stays there.
+
+## Actions
+
+None. The package ships an empty action set — there is nothing on the server side to act on.
+
+## Tasks
+
+None. This package raises no tasks, so the service is never held on a prompt and its ordinary controls are always available.
 
 ## Health Checks
 
-| Check | Purpose |
-|-------|---------|
-| `primary` (port 80) | nginx is listening and ready to serve the web app |
+One check, on the only daemon.
+
+| Check     | Displayed as    | Method               |
+| --------- | --------------- | -------------------- |
+| `primary` | "Web Interface" | Port 80 is listening |
+
+**A green check means the page is being served, and says nothing about your node.** A user whose wallet shows disconnected while this check is green is looking at a Core Lightning problem, a websocket that was never enabled, or an address given to the app from the wrong network context.
+
+## Backups and Restore
+
+The `main` volume is copied wholesale — `sdk.Backups.ofVolumes('main')` — and in practice **the backup is empty**, because the service writes nothing.
+
+**A StartOS backup of this service protects nothing.** Wallets, node connections, runes and history are in the browser's local storage. Clearing site data, switching browsers, or moving to another device means setting the connection up again, whatever backups exist here. The rune is the thing worth keeping a copy of, and it is generated by Core Lightning rather than by this package.
+
+## Limitations and Differences
+
+1. **All state is browser-side.** Backups, restores, and moving to a new device do nothing for your configuration.
+2. **The websocket must be enabled on Core Lightning**, and this package cannot do it or detect that it is missing.
+3. **The address you give the app must match how you loaded the page** — onion with onion, LAN with LAN, each with its own scheme.
+4. **No actions and no configuration.** There is nothing to set on this service.
+5. **The volume is unused**, and kept only for the shape of a standard package.
+6. **Health says nothing about the node.** It reports only that the page is being served.
 
 ---
 
-## Building from Source
+## Quick Reference for AI Consumers
 
-### Prerequisites
-
-- `docker` with `buildx`
-- `node` (LTS) and `npm`
-- `start-cli` from the [start-os SDK](https://docs.start9.com/latest/developer-docs/packaging)
-- `make`
-
-### Clone
-
-```sh
-git clone https://github.com/clams-tech/clams-remote-startos
-cd clams-remote-startos
-git submodule update --init --recursive
-```
-
-### Build
-
-```sh
-make           # build for all supported architectures
-make x86       # amd64 only
-make arm       # arm64 only
-```
-
-### Install
-
-With `host: http://<your-server>.local` set in `~/.startos/config.yaml`:
-
-```sh
-make install
-```
-
-Or install manually:
-
-```sh
-start-cli package install clams-remote.s9pk
+```yaml
+package_id: clams-remote
+image: built from ./Dockerfile # nginx serving the built upstream SPA
+architectures:
+  - x86_64
+  - aarch64
+subcontainers:
+  - primary
+volumes:
+  main: /data # mounted but unused
+file_models: []
+startos_managed_env_vars: []
+dependencies:
+  - c-lightning # required, kind: running; nothing mounted, no address resolved
+interfaces:
+  ui: { type: ui, port: 80 }
+actions: []
+tasks: []
+health_checks:
+  - primary # displayed "Web Interface"; reports the page only
 ```
