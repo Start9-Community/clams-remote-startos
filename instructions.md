@@ -2,6 +2,7 @@
 
 ## Documentation
 
+- [Start9 Bitcoin Guides](https://docs.start9.com/bitcoin-guides/) — connecting wallets and dashboards to a Lightning node on StartOS.
 - [Clams Remote README](https://github.com/clams-tech/Remote#readme) — the upstream README, covering the app's design and features.
 
 ## What you get on StartOS
