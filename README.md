@@ -87,6 +87,8 @@ One interface, which serves the page — and one connection that does **not** go
 
 Bound on the `ui-multi` MultiHost over HTTP and not masked.
 
+**A server carried over from StartOS 0.3.5** also had a `clams-remote` host, bound on internal port 80. The 2.6.1:7 migration retires it, with any domain attached to it; an `.onion` address it had is not moved to `ui-multi`, so the user adds one to the Web UI interface.
+
 **The browser connects to Core Lightning directly**, on Core Lightning's own websocket address, not through this service. So two addresses are in play at once, and they have to match in network context: a page loaded over Tor must be given Core Lightning's onion address, and a page loaded over the LAN must be given its LAN address. Mixing them fails at the browser, with nothing on the server to show for it.
 
 That is also why the scheme differs between the two — the LAN address is TLS-terminated by StartOS and the onion is not.

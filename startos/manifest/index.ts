@@ -1,5 +1,5 @@
 import { setupManifest } from '@start9labs/start-sdk'
-import { depCLightningDescription, long, short } from './i18n'
+import { long, short } from './i18n'
 
 export const manifest = setupManifest({
   id: 'clams-remote',
@@ -15,16 +15,6 @@ export const manifest = setupManifest({
     'clams-remote': {
       source: { dockerBuild: {} },
       arch: ['x86_64', 'aarch64'],
-    },
-  },
-  dependencies: {
-    'c-lightning': {
-      description: depCLightningDescription,
-      optional: false,
-      metadata: {
-        title: 'Core Lightning',
-        icon: 'https://raw.githubusercontent.com/Start9Labs/cln-startos/refs/heads/master/icon.svg',
-      },
     },
   },
 })

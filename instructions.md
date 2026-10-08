@@ -9,7 +9,7 @@
 
 Clams Remote is a browser-only progressive web app for controlling Core Lightning nodes. This package serves the built static app from an nginx container; everything else — node connections, settings, transaction history — lives in your browser. Your browser talks directly to Core Lightning's websocket; the StartOS package only delivers the page.
 
-You get a **Web UI** interface, available over both Tor and your LAN.
+You get a **Web UI** interface, reachable on your LAN, and over Tor once you add a Tor address to it.
 
 ## Getting set up
 

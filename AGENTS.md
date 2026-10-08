@@ -18,15 +18,22 @@ Freshly scaffolded? Work the
 guide page, not a file in this repo — read it, don't copy it in.
 
 Keep `README.md` (technical reference for an AI support or administering agent) and
-`instructions.md` (end-user docs) in sync with your changes.
+`instructions.md` (end-user docs) in sync with your changes. This file restates neither:
+whoever changes the package has both, so it carries only what they don't — repo mechanics,
+a change that looks right and is not, where the next thing gets added, a naming trap, a
+build or test invocation particular to this repo.
 
-**Bugs and feature requests are GitHub issues on this repo** — file them as you find them.
+**Fix a defect you spot rather than reporting it** — you have the package open and the
+context to be sure. File **a GitHub issue on this repo** only when the call isn't yours to
+make: you can't pin the cause down, two defensible fixes exist, or it's too large to ride on
+the work in hand. An open issue is a report, not a queue — implement one when you're asked
+to or when it's labelled `Approved`, then close it with `Closes #<n>`.
+
 Don't record work in the repo instead: no `TODO.md`, no `NOTES.md`, no `PLAN.md`. What you
 verified, tried, and decided belongs in the commit message and the PR body.
 
 ## This repo
 
-- **The container never talks to Core Lightning, and must not start.** This is a static SPA served by nginx; the browser holds the rune and opens the websocket itself. Don't add an address resolution, a dependency mount, or a proxy — any of them would put node credentials on the server, which is the thing this design avoids.
-- **The Core Lightning dependency is declared for ordering and gating only.** Nothing is mounted and no bridge address is read; it exists so the app is not installed without a node.
 - **Run `git submodule update --init --recursive` before a local build.** The app lives in the `clams-remote/` submodule; without it there is nothing to compile.
-- **The `main` volume is unused.** Leave it: it keeps the package's shape standard, and removing it would be a migration for no gain.
+- **Don't give the container a path to Core Lightning** — no address resolution, dependency mount or proxy. Any of them puts node credentials on the server, which this design exists to avoid.
+- **Don't remove the unused `main` volume.** Dropping it is a migration that buys nothing.
